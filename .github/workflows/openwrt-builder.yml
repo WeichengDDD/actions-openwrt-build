@@ -23,13 +23,10 @@ jobs:
 
     steps:
     - name: Initialization environment
-      run: |
-        sudo apt-get update
-        sudo apt-get upgrade
-        sudo apt-get clean
+      run: sudo apt-get update && sudo apt-get upgrade && sudo apt-get clean
 
 
     - name: Clone source code
       working-directory: /workdir
-      run: |
+      run:
         git clone $REPO_URL -b $REPO_BRANCH $GITHUB_WORKSPACE/openwrt
