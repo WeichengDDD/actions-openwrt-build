@@ -26,7 +26,7 @@ jobs:
       run: |
         apt-get update
         apt-get upgrade
-        apt-get -qq clean
+        apt-get clean
 
 
     - name: clone source code
