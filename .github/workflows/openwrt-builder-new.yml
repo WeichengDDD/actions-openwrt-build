@@ -1,6 +1,6 @@
 # Description: Build OpenWrt using GitHub Actions
 
-name: OpenWrt Builder
+name: OpenWrt Builder New
 
 on:
   workflow_dispatch:
