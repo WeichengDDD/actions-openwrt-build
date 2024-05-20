@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Check out branch
+      uses: actions/checkout@v4
+
     - name: Initialization environment
       run: |
         sudo apt-get update
@@ -31,11 +34,6 @@ jobs:
     - name: Clone source code
       run: |
         git clone $REPO_URL -b $REPO_BRANCH $GITHUB_WORKSPACE/openwrt
-
-    - name: Echo files
-      run: |
-        pwd
-        ls -a
 
     - name: Load custom feeds
       run: |
