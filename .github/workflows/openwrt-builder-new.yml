@@ -23,10 +23,19 @@ jobs:
 
     steps:
     - name: Initialization environment
-      run: sudo apt-get update && sudo apt-get upgrade && sudo apt-get clean
+      run: |
+        sudo apt-get update
+        sudo apt-get upgrade
+        sudo apt-get clean
 
     - name: Clone source code
-      run: git clone $REPO_URL -b $REPO_BRANCH $GITHUB_WORKSPACE/openwrt
+      run: |
+        git clone $REPO_URL -b $REPO_BRANCH $GITHUB_WORKSPACE/openwrt
+
+    - name: Echo files
+      run: |
+        pwd
+        ls -a
 
     - name: Load custom feeds
       run: |
