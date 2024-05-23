@@ -10,8 +10,8 @@ env:
   REPO_BRANCH: openwrt-23.05
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: openwrt_config
-  DIY_P1_SH: diy_feeds_conf.sh
-  DIY_P2_SH: diy_openwrt.sh
+  DIY_FEEDS_CONF_SH: diy_feeds_conf.sh
+  DIY_CONFIG_SH: diy_config.sh
 
 jobs:
   build:
@@ -36,9 +36,9 @@ jobs:
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
+        chmod +x $DIY_FEEDS_CONF_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        $GITHUB_WORKSPACE/$DIY_FEEDS_CONF_SH
 
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
@@ -49,9 +49,9 @@ jobs:
     - name: Load custom configuration
       run: |
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
+        chmod +x $DIY_CONFIG_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/$DIY_CONFIG_SH
 
     - name: Download package
       id: package
@@ -70,11 +70,11 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
     - name: Organize files
       id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      if: ${{ !cancelled() }}
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
@@ -88,23 +88,14 @@ jobs:
         name: OpenWrt_firmware_${{ env.DEVICE_NAME }}_${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}
 
-    - name: Generate release tag
-      id: tag
-      if: ${{ !cancelled() }}
-      run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
-        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v2.0.5
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      if: ${{ !cancelled() }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
+        tag_name: $(date +"%Y.%m.%d-%H%M")
         files: ${{ env.FIRMWARE }}/*
 
     - name: Delete workflow runs
@@ -117,8 +108,8 @@ jobs:
     - name: Delete Older Releases
       uses: dev-drprasad/delete-older-releases@v0.3.4
       if: ${{ !cancelled() }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         keep_latest: 1
         delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
